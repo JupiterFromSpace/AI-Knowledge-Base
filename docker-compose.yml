@@ -1,0 +1,30 @@
+services:
+
+  db:
+    image: postgres:14-alpine
+    container_name: ai_knowledge_base_db
+    environment:
+      POSTGRES_DB: ai_knowledge_base
+      POSTGRES_USER: ai_knowledge_user
+      POSTGRES_PASSWORD: ai_knowledge_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - ai_knowledge_base_postgres_data:/var/lib/postgresql/data
+    restart: always
+
+  backend:
+    build: .
+    container_name: ai_knowledge_base_backend
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/core /app/
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    env_file:
+      - .env
+
+volumes:
+  ai_knowledge_base_postgres_data:
