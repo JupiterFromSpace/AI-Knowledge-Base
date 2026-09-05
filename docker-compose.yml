@@ -18,7 +18,7 @@ services:
     container_name: ai_knowledge_base_backend
     command: python manage.py runserver 0.0.0.0:8000
     volumes:
-      - .:/core /app/
+      - ./core:/app
     ports:
       - "8000:8000"
     depends_on:
