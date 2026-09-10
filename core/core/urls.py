@@ -40,6 +40,7 @@ urlpatterns = [
     path('api/v1/auth/', include('accounts.api.v1.urls')),
     path('api/v1/organizations/', include('organizations.api.v1.urls')),
     path('api/v1/organizations/<uuid:organization_id>/documents/', include('documents.api.v1.urls')),
+    path('api/v1/organizations/<uuid:organization_id>/conversations/', include('chat.api.v1.urls')),
     
     path("swagger.json/", schema_view.without_ui(cache_timeout=0), name="schema-json"),
     path(
