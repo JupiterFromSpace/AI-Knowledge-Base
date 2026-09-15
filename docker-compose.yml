@@ -26,5 +26,29 @@ services:
     env_file:
       - .env
 
+
+  redis:
+    image: redis
+    container_name: ai_knowledge_base_redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  worker:
+    build: .
+    command: celery -A core worker --loglevel=info
+    volumes:
+      - ./core:/app
+    depends_on:
+      - redis
+      - backend
+    env_file:
+      - .env
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+
+
 volumes:
   ai_knowledge_base_postgres_data:
