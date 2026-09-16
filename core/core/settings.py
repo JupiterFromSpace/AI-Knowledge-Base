@@ -153,6 +153,13 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Third-party API keys
+# GEMINI_API_KEY is used by documents.services.embedder. Left optional
+# (default="") so the project still boots/checks without it configured;
+# the embedding service itself raises a clear error if it's missing
+# at the point it's actually needed.
+GEMINI_API_KEY = config("GEMINI_API_KEY", default="")
+
 
 
 # celery configs

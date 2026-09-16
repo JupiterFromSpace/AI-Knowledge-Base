@@ -1,7 +1,12 @@
 services:
 
   db:
-    image: postgres:14-alpine
+    # postgres:14-alpine does not ship the pgvector extension, so
+    # `CREATE EXTENSION vector` (run by documents/migrations/0002_
+    # enable_vector_extension.py) would fail against it. This is the
+    # same Postgres 14 build, with pgvector pre-installed — nothing
+    # else about the service changes.
+    image: pgvector/pgvector:pg14
     container_name: ai_knowledge_base_db
     environment:
       POSTGRES_DB: ai_knowledge_base

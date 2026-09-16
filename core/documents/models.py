@@ -5,6 +5,7 @@ import uuid
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
 from django.db import models
+from pgvector.django import VectorField
 
 
 class DocumentStatus(models.TextChoices):
@@ -86,6 +87,16 @@ class DocumentChunk(models.Model):
     )
     metadata = models.JSONField(
         default=dict,
+        blank=True,
+    )
+    # Gemini Embedding 2, truncated via output_dimensionality=768 (see
+    # documents.services.embedder). Nullable: a chunk is created by
+    # the chunking stage before a later Celery step generates and
+    # saves its embedding — those are two separate points in the
+    # pipeline, not one atomic step.
+    embedding = VectorField(
+        dimensions=768,
+        null=True,
         blank=True,
     )
     created_at = models.DateTimeField(
