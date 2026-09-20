@@ -14,6 +14,10 @@ from chat.models import Conversation, Message, MessageRole
 from core.utils.responses import APIResponse
 from organizations.models import Organization
 
+from ai.services.rag import generate_rag_answer
+from ai.services.rag import RAGGenerationError
+
+
 
 class ConversationListCreateView(generics.ListCreateAPIView):
     """GET (list the caller's own conversations) / POST (create a conversation).
@@ -159,18 +163,41 @@ class MessageListCreateView(generics.ListCreateAPIView):
         return APIResponse.success(data=serializer.data, message="Messages retrieved successfully.")
 
     def create(self, request, *args, **kwargs):
-        # get_conversation() already enforces: caller is a member of
-        # the organization, the conversation belongs to that
-        # organization, and the caller owns the conversation.
         conversation = self.get_conversation()
-
+    
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        message = serializer.save(conversation=conversation, role=MessageRole.USER)
-
-        output = MessageSerializer(message)
+    
+        user_message = serializer.save(
+            conversation=conversation,
+            role=MessageRole.USER,
+        )
+    
+        try:
+            rag_result = generate_rag_answer(
+                question=user_message.content,
+                organization_id=str(conversation.organization_id),
+                top_k=3,
+            )
+    
+        except RAGGenerationError:
+            return APIResponse.error(
+                message="Failed to generate an answer.",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+    
+        assistant_message = Message.objects.create(
+            conversation=conversation,
+            role=MessageRole.ASSISTANT,
+            content=rag_result["answer"],
+        )
+    
         return APIResponse.success(
-            data=output.data,
-            message="Message created successfully.",
+            data={
+                "user_message": MessageSerializer(user_message).data,
+                "assistant_message": MessageSerializer(assistant_message).data,
+                "sources": rag_result["sources"],
+            },
+            message="Message processed successfully.",
             status_code=status.HTTP_201_CREATED,
         )
